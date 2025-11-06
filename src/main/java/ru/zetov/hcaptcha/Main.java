@@ -8,9 +8,9 @@ import ru.zetov.hcaptcha.listener.CaptchaListener;
 
 public final class Main extends JavaPlugin {
 
-    private static Main instance;
-    private DatabaseManager database;
-    private ConfigManager configManager;
+    public static Main instance;
+    public DatabaseManager database;
+    public ConfigManager configManager;
 
     @Override
     public void onEnable() {
@@ -29,17 +29,5 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         if (database != null) database.close();
-    }
-
-    public static Main getInstance() {
-        return instance;
-    }
-
-    public DatabaseManager getDatabase() {
-        return database;
-    }
-
-    public ConfigManager getConfigManager() {
-        return configManager;
     }
 }
