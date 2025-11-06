@@ -5,13 +5,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import ru.zetov.hcaptcha.Main;
-import ru.zetov.hcaptcha.utils.ConfigManager;
 import ru.zetov.hcaptcha.model.CaptchaSession;
 import ru.zetov.hcaptcha.model.CaptchaSound;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 public class CaptchaListener implements Listener {
 
@@ -25,10 +31,12 @@ public class CaptchaListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            long lastPassed = plugin.getDatabase().getLastPassed(player.getUniqueId());
-            long cooldown = plugin.getConfigManager().getCaptchaCooldown();
+            long lastPassed = plugin.database.getLastPassed(player.getUniqueId());
+            long cooldown = plugin.configManager.captchaCooldown;
             if (System.currentTimeMillis() - lastPassed < cooldown) return;
+
             Bukkit.getScheduler().runTask(plugin, () -> startCaptcha(player));
         });
     }
@@ -44,20 +52,18 @@ public class CaptchaListener implements Listener {
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-
         if (activeCaptcha.containsKey(player.getUniqueId())) {
             event.setCancelled(true);
-            player.sendMessage(plugin.getConfigManager().getMessageNoCommand());
+            player.sendMessage(plugin.configManager.messageNoCommand);
         }
     }
 
     @EventHandler
     public void onInventoryOpen(InventoryOpenEvent event) {
         Player player = (Player) event.getPlayer();
-
         if (activeCaptcha.containsKey(player.getUniqueId())) {
             event.setCancelled(true);
-            player.sendMessage(plugin.getConfigManager().getMessageNoMenu());
+            player.sendMessage(plugin.configManager.messageNoMenu);
         }
     }
 
@@ -68,18 +74,18 @@ public class CaptchaListener implements Listener {
 
         event.setCancelled(true);
         String message = event.getMessage().trim();
+
         Bukkit.getScheduler().runTask(plugin, () -> handleAnswer(player, message));
     }
 
     private void startCaptcha(Player player) {
-        ConfigManager cfg = plugin.getConfigManager();
-        int attempts = cfg.getMaxAttempts();
-        CaptchaSound question = CaptchaSound.random();
+        int attempts = plugin.configManager.maxAttempts;
+        CaptchaSound question = CaptchaSound.random(plugin);
 
         CaptchaSession session = new CaptchaSession(question, attempts);
         activeCaptcha.put(player.getUniqueId(), session);
 
-        player.sendMessage(cfg.getMessageQuestion());
+        player.sendMessage(plugin.configManager.messageQuestion);
         sendOptions(player, question);
 
         startRepeatingSound(player, session);
@@ -101,7 +107,7 @@ public class CaptchaListener implements Listener {
         CaptchaSound question = session.getCurrentQuestion();
         question.playSound(player);
 
-        long delayTicks = plugin.getConfigManager().getResendDelayMillis() / 50;
+        long delayTicks = plugin.configManager.resendDelayMillis / 50;
         int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
             if (!session.isActive()) {
                 Bukkit.getScheduler().cancelTask(session.getRepeatTaskId());
@@ -114,11 +120,10 @@ public class CaptchaListener implements Listener {
     }
 
     private void startTimeoutTimer(Player player, CaptchaSession session) {
-        long timeoutTicks = plugin.getConfigManager().getTimeoutMillis() / 50;
-
+        long timeoutTicks = plugin.configManager.timeoutMillis / 50;
         int taskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             if (session.isActive() && activeCaptcha.containsKey(player.getUniqueId())) {
-                player.kickPlayer(plugin.getConfigManager().getMessageTimeout());
+                player.kickPlayer(plugin.configManager.messageTimeout);
                 stopCaptcha(player, session);
             }
         }, timeoutTicks);
@@ -130,28 +135,26 @@ public class CaptchaListener implements Listener {
         CaptchaSession session = activeCaptcha.get(player.getUniqueId());
         if (session == null) return;
 
-        String answer = message.trim();
-        List<String> options = session.getCurrentQuestion().getOptions();
+        CaptchaSound question = session.getCurrentQuestion();
         boolean isCorrect = false;
 
-        if (answer.matches("\\d+")) {
+        if (message.matches("\\d+")) {
             try {
-                int index = Integer.parseInt(answer) - 1;
+                int index = Integer.parseInt(message) - 1;
+                List<String> options = question.getOptions();
                 if (index >= 0 && index < options.size()) {
                     String selectedOption = options.get(index);
-                    isCorrect = session.getCurrentQuestion().isCorrect(selectedOption);
+                    isCorrect = question.isCorrect(selectedOption);
                 }
-            } catch (NumberFormatException e) {
-                throw new RuntimeException(e);
-            }
+            } catch (NumberFormatException ignored) {}
         } else {
-            isCorrect = session.getCurrentQuestion().isCorrect(answer);
+            isCorrect = question.isCorrect(message);
         }
 
         if (isCorrect) {
-            player.sendMessage(plugin.getConfigManager().getMessageCorrect());
+            player.sendMessage(plugin.configManager.messageCorrect);
             stopCaptcha(player, session);
-            plugin.getDatabase().setLastPassed(player.getUniqueId(), System.currentTimeMillis());
+            plugin.database.setLastPassed(player.getUniqueId(), System.currentTimeMillis());
         } else {
             handleWrongAnswer(player, session);
         }
@@ -160,14 +163,14 @@ public class CaptchaListener implements Listener {
     private void handleWrongAnswer(Player player, CaptchaSession session) {
         session.decrementAttempts();
         if (session.getAttempts() <= 0) {
-            player.kickPlayer(plugin.getConfigManager().getMessageKick());
+            player.kickPlayer(plugin.configManager.messageKick);
             stopCaptcha(player, session);
             return;
         }
 
-        player.sendMessage(plugin.getConfigManager().getMessageWrong());
+        player.sendMessage(plugin.configManager.messageWrong);
 
-        CaptchaSound newQuestion = CaptchaSound.random();
+        CaptchaSound newQuestion = CaptchaSound.random(plugin);
         session.setCurrentQuestion(newQuestion);
         sendOptions(player, newQuestion);
         startRepeatingSound(player, session);

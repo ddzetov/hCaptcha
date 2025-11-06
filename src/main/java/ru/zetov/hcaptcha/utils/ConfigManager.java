@@ -10,21 +10,21 @@ import java.util.Objects;
 
 public class ConfigManager {
 
-    private final Main plugin;
+    public final Main plugin;
 
-    private long captchaCooldown;
-    private long timeoutMillis;
-    private int maxAttempts;
-    private long resendDelayMillis;
-    private String messagePrefix;
-    private String messageQuestion;
-    private String messageCorrect;
-    private String messageWrong;
-    private String messageKick;
-    private String messageNoCommand;
-    private String messageNoMenu;
-    private String messageTimeout;
-    private List<SoundEntry> soundEntries;
+    public long captchaCooldown;
+    public long timeoutMillis;
+    public int maxAttempts;
+    public long resendDelayMillis;
+    public String messagePrefix;
+    public String messageQuestion;
+    public String messageCorrect;
+    public String messageWrong;
+    public String messageKick;
+    public String messageNoCommand;
+    public String messageNoMenu;
+    public String messageTimeout;
+    public List<SoundEntry> soundEntries;
 
 
     public ConfigManager(Main plugin) {
@@ -65,55 +65,6 @@ public class ConfigManager {
         }
 
         plugin.getLogger().info("Конфиг загружен (" + soundEntries.size() + " звуков).");
-    }
-
-    public long getCaptchaCooldown() {
-        return captchaCooldown;
-    }
-
-    public int getMaxAttempts() {
-        return maxAttempts;
-    }
-
-    public long getResendDelayMillis() {
-        return resendDelayMillis;
-    }
-
-    public String getMessageQuestion() {
-        return messagePrefix + messageQuestion;
-    }
-
-    public String getMessageCorrect() {
-        return messagePrefix + messageCorrect;
-    }
-
-    public String getMessageWrong() {
-        return messagePrefix + messageWrong;
-    }
-
-    public String getMessageKick() {
-        return messageKick;
-    }
-
-    public long getTimeoutMillis() {
-        return timeoutMillis;
-    }
-
-    public String getMessageTimeout() {
-        return messageTimeout;
-    }
-
-
-    public String getMessageNoCommand() {
-        return messagePrefix + messageNoCommand;
-    }
-
-    public String getMessageNoMenu() {
-        return messageNoMenu;
-    }
-
-    public List<SoundEntry> getSoundEntries() {
-        return soundEntries;
     }
 
     private String color(String msg) {

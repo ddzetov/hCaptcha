@@ -8,13 +8,11 @@ import ru.zetov.hcaptcha.listener.CaptchaListener;
 
 public final class Main extends JavaPlugin {
 
-    public static Main instance;
     public DatabaseManager database;
     public ConfigManager configManager;
 
     @Override
     public void onEnable() {
-        instance = this;
         saveDefaultConfig();
 
         configManager = new ConfigManager(this);

@@ -10,11 +10,14 @@ import java.util.*;
 public class CaptchaSound {
 
     private static final Random RANDOM = new Random();
+
+    private final Main plugin;
     private final Sound sound;
     private final String answer;
     private List<String> cachedOptions;
 
-    public CaptchaSound(Sound sound, String answer) {
+    public CaptchaSound(Main plugin, Sound sound, String answer) {
+        this.plugin = plugin;
         this.sound = sound;
         this.answer = answer;
         this.cachedOptions = null;
@@ -33,7 +36,7 @@ public class CaptchaSound {
             return new ArrayList<>(cachedOptions);
         }
 
-        List<ConfigManager.SoundEntry> allEntries = Main.getInstance().getConfigManager().getSoundEntries();
+        List<ConfigManager.SoundEntry> allEntries = plugin.configManager.soundEntries;
         List<String> allNames = new ArrayList<>();
 
         for (ConfigManager.SoundEntry entry : allEntries) {
@@ -52,12 +55,13 @@ public class CaptchaSound {
         return new ArrayList<>(cachedOptions);
     }
 
-    public static CaptchaSound random() {
-        List<ConfigManager.SoundEntry> entries = Main.getInstance().getConfigManager().getSoundEntries();
+    public static CaptchaSound random(Main plugin) {
+        List<ConfigManager.SoundEntry> entries = plugin.configManager.soundEntries;
         if (entries.isEmpty()) {
             throw new IllegalStateException("No sound entries configured");
         }
+
         ConfigManager.SoundEntry entry = entries.get(RANDOM.nextInt(entries.size()));
-        return new CaptchaSound(entry.getSound(), entry.getName());
+        return new CaptchaSound(plugin, entry.getSound(), entry.getName());
     }
 }
