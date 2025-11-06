@@ -1,0 +1,44 @@
+settings:
+  cooldown-seconds: 10800   # Время в секундах, через которое капчу нужно проходить снова
+  attempts: 3               # Количество попыток для прохождения капчи
+  resend-delay: 2           # Задержка в секундах между повторными проигрываниями звука
+  timeout: 30               # Время в секундах на прохождение капчи (таймаут)
+
+messages:
+  prefix: "&6[hCaptcha]&r "
+  question: "Какое животное издаёт этот звук?"
+  correct: "Верно! Вы прошли капчу."
+  wrong: "Неверно! Попробуйте снова."
+  kick: "Вы не прошли капчу и были кикнуты с сервера."
+  timeout: "Время на прохождение капчи истекло!"
+  no-command: "Вы не можете использовать команды, пока не пройдёте капчу!"
+  no-menu: "&cВы не можете открывать меню пока проходите каптчу"
+
+sounds:
+  villager:
+    name: "житель"
+    sound: "ENTITY_VILLAGER_AMBIENT"
+  zombie:
+    name: "зомби"
+    sound: "ENTITY_ZOMBIE_AMBIENT"
+  skeleton:
+    name: "скелет"
+    sound: "ENTITY_SKELETON_AMBIENT"
+  horse:
+    name: "лошадь"
+    sound: "ENTITY_HORSE_AMBIENT"
+  chicken:
+    name: "курица"
+    sound: "ENTITY_CHICKEN_AMBIENT"
+  wolf:
+    name: "волк"
+    sound: "ENTITY_WOLF_AMBIENT"
+  creeper:
+    name: "крипер"
+    sound: "ENTITY_CREEPER_PRIMED"
+  enderman:
+    name: "эндермен"
+    sound: "ENTITY_ENDERMAN_AMBIENT"
+  cow:
+    name: "корова"
+    sound: "ENTITY_COW_AMBIENT"
