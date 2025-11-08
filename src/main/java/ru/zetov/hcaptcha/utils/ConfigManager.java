@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class ConfigManager {
 
-    public final Main plugin;
+    private final Main plugin;
 
     public long captchaCooldown;
     public long timeoutMillis;
@@ -24,8 +24,7 @@ public class ConfigManager {
     public String messageNoCommand;
     public String messageNoMenu;
     public String messageTimeout;
-    public List<SoundEntry> soundEntries;
-
+    public List<SoundEntry> soundEntries = new ArrayList<>();
 
     public ConfigManager(Main plugin) {
         this.plugin = plugin;
@@ -35,36 +34,35 @@ public class ConfigManager {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
 
-        this.captchaCooldown = config.getLong("settings.cooldown-seconds", 10800) * 1000L;
-        this.maxAttempts = config.getInt("settings.attempts", 3);
-        this.resendDelayMillis = config.getLong("settings.resend-delay", 2) * 1000L;
+        captchaCooldown = config.getLong("settings.cooldown-seconds", 10800) * 1000L;
+        maxAttempts = config.getInt("settings.attempts", 3);
+        resendDelayMillis = config.getLong("settings.resend-delay", 2) * 1000L;
+        timeoutMillis = config.getLong("settings.timeout", 30) * 1000L;
 
-        this.messagePrefix = color(config.getString("messages.prefix", "&6[Captcha]&r "));
-        this.messageQuestion = color(config.getString("messages.question", "&eКакое животное издаёт этот звук?"));
-        this.messageCorrect = color(config.getString("messages.correct", "&aВерно! Вы прошли капчу."));
-        this.messageWrong = color(config.getString("messages.wrong", "&cНеверно! Попробуйте снова."));
-        this.messageKick = color(config.getString("messages.kick", "&cВы не прошли капчу!"));
-        this.messageNoCommand = color(config.getString("messages.no-command", "&cВы не можете использовать команды, пока не пройдёте капчу!"));
-        this.messageNoMenu = color(config.getString("messages.no-menu", "&cВы не можете открывать меню пока проходите каптчу"));
-        this.messageTimeout = color(config.getString("messages.timeout", "&cВремя на прохождение капчи истекло!"));
-        this.timeoutMillis = config.getLong("settings.timeout", 30) * 1000L;
+        messagePrefix = color(config.getString("messages.prefix", "&6[Captcha]&r "));
+        messageQuestion = color(config.getString("messages.question", "&eКакое животное издаёт этот звук?"));
+        messageCorrect = color(config.getString("messages.correct", "&aВерно! Вы прошли капчу."));
+        messageWrong = color(config.getString("messages.wrong", "&cНеверно! Попробуйте снова."));
+        messageKick = color(config.getString("messages.kick", "&cВы не прошли капчу!"));
+        messageNoCommand = color(config.getString("messages.no-command", "&cВы не можете использовать команды, пока не пройдёте капчу!"));
+        messageNoMenu = color(config.getString("messages.no-menu", "&cВы не можете открывать меню, пока проходите капчу."));
+        messageTimeout = color(config.getString("messages.timeout", "&cВремя на прохождение капчи истекло!"));
 
-        this.soundEntries = new ArrayList<>();
-
-        if (config.contains("sounds")) {
-            for (String key : Objects.requireNonNull(config.getConfigurationSection("sounds")).getKeys(false)) {
+        soundEntries.clear();
+        var section = config.getConfigurationSection("sounds");
+        if (section != null) {
+            for (String key : section.getKeys(false)) {
                 try {
-                    String name = config.getString("sounds." + key + ".name");
-                    String soundString = config.getString("sounds." + key + ".sound");
-                    Sound sound = Sound.valueOf(Objects.requireNonNull(soundString).toUpperCase());
-                    this.soundEntries.add(new SoundEntry(Objects.requireNonNull(name).toLowerCase(), sound));
+                    String name = config.getString("sounds." + key + ".name", key).toLowerCase();
+                    Sound sound = Sound.valueOf(Objects.requireNonNull(config.getString("sounds." + key + ".sound")).toUpperCase());
+                    soundEntries.add(new SoundEntry(name, sound));
                 } catch (Exception e) {
                     plugin.getLogger().warning("Ошибка при загрузке звука: " + key);
                 }
             }
         }
 
-        plugin.getLogger().info("Конфиг загружен (" + soundEntries.size() + " звуков).");
+        plugin.getLogger().info("Конфиг успешно загружен (" + soundEntries.size() + " звуков).");
     }
 
     private String color(String msg) {

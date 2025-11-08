@@ -1,73 +1,61 @@
 package ru.zetov.hcaptcha.model;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import ru.zetov.hcaptcha.Main;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CaptchaSession {
 
     public CaptchaSound currentQuestion;
-    public AtomicInteger attempts;
-    public int repeatTaskId = -1;
-    public int timeoutTaskId = -1;
-    public boolean active = true;
+    private final AtomicInteger attempts;
+    private int repeatTaskId = -1;
+    private int timeoutTaskId = -1;
+    private boolean active = true;
 
     public CaptchaSession(CaptchaSound question, int attempts) {
         this.currentQuestion = question;
         this.attempts = new AtomicInteger(attempts);
     }
 
-    public void decrementAttempts() {
-        attempts.updateAndGet(current -> current > 0 ? current - 1 : 0);
+    public void startTasks(Main plugin, Player player) {
+        long repeatDelay = plugin.configManager.resendDelayMillis / 50;
+        long timeoutDelay = plugin.configManager.timeoutMillis / 50;
+
+        currentQuestion.playSound(player);
+
+        repeatTaskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, () -> {
+            if (!active) {
+                cancelAllTasks();
+                return;
+            }
+            currentQuestion.playSound(player);
+        }, repeatDelay, repeatDelay);
+
+        timeoutTaskId = Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+            if (active) {
+                player.kickPlayer(plugin.configManager.messageTimeout);
+                cancelAllTasks();
+            }
+        }, timeoutDelay);
     }
 
-    public boolean hasAttempts() {
-        return attempts.get() > 0;
-    }
-
-    public boolean isActive() {
-        return active && hasAttempts();
-    }
-
-    public void stop() {
-        this.active = false;
-    }
-
-    public boolean hasRepeatTask() {
-        return repeatTaskId != -1;
-    }
-
-    public boolean hasTimeoutTask() {
-        return timeoutTaskId != -1;
+    public boolean decrementAndCheck() {
+        return attempts.decrementAndGet() > 0;
     }
 
     public void cancelAllTasks() {
-        if (hasRepeatTask()) {
-            try {
-                Bukkit.getScheduler().cancelTask(repeatTaskId);
-                repeatTaskId = -1;
-            } catch (Exception ignored) {}
+        if (!active) return;
+        active = false;
+
+        if (repeatTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(repeatTaskId);
+            repeatTaskId = -1;
         }
-
-        if (hasTimeoutTask()) {
-            try {
-                Bukkit.getScheduler().cancelTask(timeoutTaskId);
-                timeoutTaskId = -1;
-            } catch (Exception ignored) {}
-        }
-    }
-
-    public void cleanup() {
-        stop();
-        cancelAllTasks();
-        currentQuestion = null;
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            cleanup();
-        } finally {
-            super.finalize();
+        if (timeoutTaskId != -1) {
+            Bukkit.getScheduler().cancelTask(timeoutTaskId);
+            timeoutTaskId = -1;
         }
     }
 }
