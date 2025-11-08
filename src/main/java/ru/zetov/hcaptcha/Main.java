@@ -26,6 +26,7 @@ public final class Main extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new CaptchaListener(this), this);
         Objects.requireNonNull(getCommand("hcaptcha")).setExecutor(new CaptchaCommand(this));
+        Objects.requireNonNull(getCommand("hcaptcha")).setTabCompleter(new CaptchaCommand(this));
     }
 
     @Override
