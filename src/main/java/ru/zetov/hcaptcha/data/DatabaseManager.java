@@ -57,6 +57,11 @@ public class DatabaseManager {
         }
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
+
+
     public void close() {
         try {
             if (connection != null && !connection.isClosed()) connection.close();

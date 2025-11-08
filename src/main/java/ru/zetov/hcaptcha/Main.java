@@ -2,9 +2,12 @@ package ru.zetov.hcaptcha;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import ru.zetov.hcaptcha.listener.CaptchaCommand;
 import ru.zetov.hcaptcha.utils.ConfigManager;
 import ru.zetov.hcaptcha.data.DatabaseManager;
 import ru.zetov.hcaptcha.listener.CaptchaListener;
+
+import java.util.Objects;
 
 public final class Main extends JavaPlugin {
 
@@ -22,6 +25,7 @@ public final class Main extends JavaPlugin {
         database.init();
 
         Bukkit.getPluginManager().registerEvents(new CaptchaListener(this), this);
+        Objects.requireNonNull(getCommand("hcaptcha")).setExecutor(new CaptchaCommand(this));
     }
 
     @Override

@@ -18,13 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.Random;
 
 public class CaptchaListener implements Listener {
 
     private final Main plugin;
     private final Map<UUID, CaptchaSession> activeCaptcha = new HashMap<>();
-    private final Random random = new Random();
 
     public CaptchaListener(Main plugin) {
         this.plugin = plugin;

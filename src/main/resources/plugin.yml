@@ -1,5 +1,11 @@
 name: hCaptcha
-version: '${project.version}'
+version: '1.0'
 main: ru.zetov.hcaptcha.Main
 api-version: '1.16'
 authors: [ddzetov]
+commands:
+  hcaptcha:
+    permission: hcaptcha.admin
+permissions:
+  hcaptcha.admin:
+    default: op
